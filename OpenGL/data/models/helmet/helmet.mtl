@@ -1,0 +1,9 @@
+# Blender MTL File: 'None'
+# Material Count: 2
+
+newmtl Glass_Mat
+map_Kd Glass_Mat_Colour.png
+
+newmtl Mando_Helm_Mat
+map_Kd Mando_Helm_Mat_Colour.png
+map_Ks Mando_Helm_Mat_AO.png

@@ -1,0 +1,211 @@
+import bpy
+import numpy as np
+import os
+
+from mathutils import Matrix
+
+# This one here is not really necessary
+def get_calibration_matrix_K_from_blender(camd):
+    f_in_mm = camd.lens
+    scene = bpy.context.scene
+    resolution_x_in_px = scene.render.resolution_x
+    resolution_y_in_px = scene.render.resolution_y
+    scale = scene.render.resolution_percentage / 100
+    sensor_width_in_mm = camd.sensor_width
+    sensor_height_in_mm = camd.sensor_height
+    pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+    if (camd.sensor_fit == 'VERTICAL'):
+        # the sensor height is fixed (sensor fit is horizontal), 
+        # the sensor width is effectively changed with the pixel aspect ratio
+        s_u = resolution_x_in_px * scale / sensor_width_in_mm / pixel_aspect_ratio 
+        s_v = resolution_y_in_px * scale / sensor_height_in_mm
+    else: # 'HORIZONTAL' and 'AUTO'
+        # the sensor width is fixed (sensor fit is horizontal), 
+        # the sensor height is effectively changed with the pixel aspect ratio
+        pixel_aspect_ratio = scene.render.pixel_aspect_x / scene.render.pixel_aspect_y
+        s_u = resolution_x_in_px * scale / sensor_width_in_mm
+        s_v = resolution_y_in_px * scale * pixel_aspect_ratio / sensor_height_in_mm
+
+    # Parameters of intrinsic calibration matrix K
+    alpha_u = f_in_mm * s_u
+    alpha_v = f_in_mm * s_v
+    u_0 = resolution_x_in_px*scale / 2
+    v_0 = resolution_y_in_px*scale / 2
+    skew = 0 # only use rectangular pixels
+
+    K = Matrix(
+        ((alpha_u, skew,    u_0),
+        (    0  ,  alpha_v, v_0),
+        (    0  ,    0,      1 )))
+    return K
+
+# only for cameras whose center is in the optical axis!
+# modify to accept near plane
+def camera_from_KRT(near_in_mm, fx, fy, H, W, R_world2cv, T_world2cv, scale):
+
+    scene = bpy.context.scene
+    f_in_mm = near_in_mm # in near units
+    spx = 1/(fx/f_in_mm)  # horizontal size of a pixel, in focal length units
+    spy = 1/(fy/f_in_mm)  # horizontal size of a pixel, in focal length units
+    sensor_width_in_mm = W * spx
+    sensor_height_in_mm = H * spy
+#    sensor_width_in_mm = K[1,1]*K[0,2] / (K[0,0]*K[1,2])    # (length of a pixel in c.u. x W)/(height of a pixel in c.u. x H) = sensor_width_c.u./sensor_height_c.u.
+#    sensor_height_in_mm = 1  # doesn't matter
+#    resolution_x_in_px = K[0,2]*2  # principal point assumed at the center: W
+#    resolution_y_in_px = K[1,2]*2  # principal point assumed at the center: H
+
+#    s_u = resolution_x_in_px / sensor_width_in_mm   # i.e. W/ (length of a pixel in c.u. x W) * (height of a pixel in c.u. x H) =  
+#    s_v = resolution_y_in_px / sensor_height_in_mm
+#    # TODO include aspect ratio
+#    f_in_mm = K[0,0] / s_u
+#    # recover original resolution
+    scene.render.resolution_x = W / scale
+    scene.render.resolution_y = H / scale
+#    scene.render.resolution_percentage = scale * 100
+
+    # Use this if the projection matrix follows the convention listed in my answer to
+    # https://blender.stackexchange.com/questions/38009/3x4-camera-matrix-from-blender-camera
+    R_bcam2cv = Matrix(
+        ((1, 0, 0),
+         (0, 1, 0),
+         (0, 0, 1)))
+
+    # Use this if the projection matrix follows the convention from e.g. the matlab calibration toolbox:
+    # R_bcam2cv = Matrix(
+    #     ((-1, 0,  0),
+    #      (0, 1, 0),
+    #      (0, 0, 1)))
+
+    R_cv2world = R_world2cv.T
+    rotation =  Matrix(R_cv2world.tolist()) @ R_bcam2cv
+    location = -R_cv2world @ T_world2cv
+
+    # create a new camera
+    bpy.ops.object.add(
+        type='CAMERA',
+        location=location)
+    ob = bpy.context.object
+    ob.name = 'OGLCamObj'
+    cam = ob.data
+    cam.name = 'OGLCamObj'
+
+    # Lens
+    cam.type = 'PERSP'
+    cam.lens = f_in_mm
+    cam.lens_unit = 'MILLIMETERS'
+    cam.sensor_width  = sensor_width_in_mm
+    cam.sensor_height  = sensor_height_in_mm
+    ob.matrix_world = Matrix.Translation(location)@rotation.to_4x4()
+
+    cam.shift_x = 0
+    cam.shift_y = 0
+    cam.clip_start = near_in_mm/1000
+    #     cam.clip_end = 250.0
+    #     empty = bpy.data.objects.new('DofEmpty', None)
+    #     empty.location = origin+Vector((0,10,0))
+    #     cam.dof_object = empty
+
+    # Display
+    cam.show_name = True
+    # Make this the current camera
+    scene.camera = ob
+#    bpy.context.scene.update()
+
+if __name__ == "__main__":
+    # Insert your camera name below
+#    K = get_calibration_matrix_K_from_blender(bpy.data.objects['Camera'].data)
+    
+    # Blender stuf
+    scene = bpy.context.scene
+#    camdata = scene.camera.data
+    
+    # Get camera rotation matrix
+    filepath = bpy.data.filepath
+    file_directory = os.path.dirname(filepath)   # containts directory of this .blend file
+    
+    cam_file = open(os.path.join(file_directory,"0_camera_pose.txt"),"r")
+    cam_file_lines = cam_file.readlines()
+    
+    T_WC = np.eye(4)
+    for i in range(0,4):
+        for j in range(0,4):
+            T_WC[i,j] = float(cam_file_lines[2 + 4*i+j])
+    cam_file.close()
+    
+    #As you can see, the world frame of Blender is really not the same thing as the OpenGl world framee
+    T_BlW = np.array([[1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1]])
+    T_WC = T_BlW @ T_WC
+    
+    T_CW = np.linalg.inv(T_WC)
+    
+    R_CW = T_CW[0:3, 0:3]
+    t_CW = T_CW[0:3, 3]
+    
+    # Get intrinsics 
+    conf_file = open(os.path.join(file_directory,"conf.txt"),"r")
+    conf_file_lines = conf_file.readlines()
+    
+    H = float(conf_file_lines[3])
+    W = float(conf_file_lines[4])
+    near = float(conf_file_lines[8])
+    fx = float(conf_file_lines[11])
+    fy = float(conf_file_lines[12])
+    near_in_mm = near * 1000;
+
+    conf_file.close()
+    
+    # Create new camera with desired intrinsics
+    camera_from_KRT(near_in_mm, fx, fy, H, W, R_CW, t_CW, 1)
+    
+    # Render depth now
+    cam = bpy.data.objects['OGLCamObj']
+    cam.select_set(True)
+    bpy.context.scene.render.use_compositing = True
+    bpy.context.scene.use_nodes = True
+    tree = bpy.context.scene.node_tree
+    links = tree.links
+    for n in tree.nodes:
+        tree.nodes.remove(n)
+    rl = tree.nodes.new('CompositorNodeRLayers')      
+    vl = tree.nodes.new('CompositorNodeViewer')   
+    vl.use_alpha = True
+    links.new(rl.outputs[0], vl.inputs[0])  # link Renger Image to Viewer Image
+    links.new(rl.outputs[2], vl.inputs[1])  # link Render Z to Viewer Alpha
+    bpy.context.scene.render.resolution_percentage = 100 #make sure scene height and width are ok (edit)
+    
+    depth_path = os.path.join(file_directory,"depth_blender.txt")
+    depth_file = open(depth_path,"w")
+    bpy.context.view_layer.update()
+    
+    
+    bpy.ops.render.render()
+    #get the pixels and put them into a numpy array
+    pixels = np.array(bpy.data.images['Viewer Node'].pixels)
+    print(len(pixels))
+
+    width = bpy.context.scene.render.resolution_x 
+    height = bpy.context.scene.render.resolution_y
+
+    #reshaping into image array 4 channel (rgbz)
+    image = pixels.reshape(height,width,4)
+
+    #depth analysis...
+    z = image[:,:,3]
+    np.savetxt(depth_path,np.ravel(z),delimiter=',')
+    
+    bpy.ops.render.render(use_viewport = True, write_still=True)
+    
+    depth_file.close()
+    
+    # Remove the camera
+    if bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    # deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
+    # select the object
+    bpy.data.objects['OGLCamObj'].select_set(True)
+    # delete all selected objects
+    bpy.ops.object.delete()
+    
+    # Let's set the camera parameters such that we get the desired K. Luckily, no units are required.. they actually are?
+    
