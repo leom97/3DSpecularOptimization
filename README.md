@@ -1,4 +1,4 @@
-# Specular-optimization
+# Specular optimization
 We aim at recovering specular albedo and shininess in a photometric stereo procedure.
 
 The adopted camera model is pinhole.
