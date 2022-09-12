@@ -66,13 +66,11 @@ Beforehands, we explain how to setup the OpenGL data generation, with Microsoft 
 ## Configuring the Visual Studio Project
 - set up glad, glfw, assimp as in `https://learnopengl.com/Getting-started/Creating-a-window`, `https://learnopengl.com/Model-Loading/Assimp`. Remember to put `assimp-vc143-mtd.lib` under the `lib`
 - create a new project in the folder `OpenGL`, call it `data_generation`
-- copy `src, lib, include, data` in `OpenGL`
-- add `glad.c` as a source file for the `data_generation` solution
-- add as new element the file `rgbd_generator.cpp`
-- copy/paste the source code inside `rgbd_generator.cpp`
+- add `src\glad.c` as a source file for the `data_generation` solution
+- add `src\rgbd_generator.cpp` as a source file for the `data_generation` solution
 - add the `lib` and `include` directories in the `solution properties > configuration properties > VC++ directories > general > library directory` and `inclusion directories`. The two folders must be in front of the other
 - prepend `assimp-vc143-mtd.lib;opengl32.lib;glfw3.lib;` to `solution properties > configuration properties > linker > additional dependencies`
-- add the `lib`folder to `solution properties > configuration properties > linker > general > additional library directories`
+- add the `lib` folder to `solution properties > configuration properties > linker > general > additional library directories`
 - add the `bin` path to `solution properties > configuration properties > debug > environment`: use the syntax `PATH=C:\path\to\bin;%PATH%`
 - add `mesh.h, conf.h, model.h` in the header files of the solution
 
