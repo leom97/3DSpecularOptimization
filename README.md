@@ -64,8 +64,8 @@ In turn, this file also needs some input before being run: we now explain how to
 Beforehands, we explain how to setup the OpenGL data generation, with Microsoft Visual Studio 2022. The instructions work on Windows 10. We are all the time working in the folder `OpenGL`.
 
 ## Configuring the Visual Studio Project
-- set up glad, glfw, assimp as in https://learnopengl.com/Getting-started/Creating-a-window, https://learnopengl.com/Model-Loading/Assimp. Remember to put `assimp-vc143-mtd.lib` under the `lib`
-- create a new project in the folder `OpenGL`, call it `data_generation`
+- set up glad, khr, glfw, assimp, glm as in https://learnopengl.com/Getting-started/Creating-a-window, https://learnopengl.com/Model-Loading/Assimp, https://learnopengl.com/Getting-started/Transformations. Populate `lib` with the files indicated in `lib\list of libs that should be here.txt`, and `include` with the necessary header files.
+- create a new project in the folder `OpenGL`, call it e.g. `data_generation`
 - add `src\glad.c`, `src\rgbd_generator.cpp` as source files for the `data_generation` solution
 - add the `lib` and `include` directories in the `solution properties > configuration properties > VC++ directories > general > library directory` and `inclusion directories`. The two folders must be in front of the other
 - prepend `assimp-vc143-mtd.lib;opengl32.lib;glfw3.lib;` to `solution properties > configuration properties > linker > additional dependencies`
