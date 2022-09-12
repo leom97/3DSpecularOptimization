@@ -61,7 +61,10 @@ The user should generate his/her data with the script `opengl2matlab.m`, that ca
 
 In turn, this file also needs some input before being run: we now explain how to generate such input.
 
-Beforehands, we explain how to setup the OpenGL data generation, with Microsoft Visual Studio 2022. The instructions work on Windows 10.
+Beforehands, we explain how to setup the OpenGL data generation, with Microsoft Visual Studio 2022. The instructions work on Windows 10. We are all the time working in the folder `OpenGL`.
+
+## Configuring the Visual Studio Project
+- set up glad, glfw, assimp as in `https://learnopengl.com/Getting-started/Creating-a-window`, `https://learnopengl.com/Model-Loading/Assimp`. Remember to put `assimp-vc143-mtd.lib` under the `lib`
 - create a new project in the folder `OpenGL`, call it `data_generation`
 - copy `src, lib, include, data` in `OpenGL`
 - add `glad.c` as a source file for the `data_generation` solution
@@ -73,6 +76,7 @@ Beforehands, we explain how to setup the OpenGL data generation, with Microsoft 
 - add the `bin` path to `solution properties > configuration properties > debug > environment`: use the syntax `PATH=C:\path\to\bin;%PATH%`
 - add `mesh.h, conf.h, model.h` in the header files of the solution
 
+## Running the C++ code
 - the user has to provide a textured geometric model. For the two aforementioned examples, we provide all the needed files. It is important to set up the `.mtl` file correctly, a guide on how to do this is avaiable here: https://www.youtube.com/watch?v=4DQquG_o-Ac&ab_channel=Code%2CTech%2CandTutorials. The model folder has to be specified in `OpenGL\conf.h` through the string `model`
 - with reference to `OpenGL\conf.h`, manually the user has specify an `out_folder`, which must exist in the system. Everything will be saved there
 - then, run the main file `OpenGL\depth_map.cpp`. A window will pop up. The navigation is locked, press `u` or `l` to unlock or lock the navigation. With the keys `a,w,s,d` the user can translate the camera, with the mouse position the orientation can be changed, a zoom effect is available with the mouse wheel. With the keys, the light can be modified, just for visualization purposes. Once `enter` is pressed, a series of pictures of the object are rendered, see `OpenGL\conf.h` for more details. Press `esc` to exit
