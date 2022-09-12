@@ -53,7 +53,7 @@ It is in Matlab, and mainly contained in `launch.m`, which the user can run (jus
 
 Two ready datasets are provided in the folder `Datasets`. Best parameters configurations for both of them are also indicated in `launch.m`.
 
-These are generated using OpenGL and the script `Datasets\opengl2matlab.m`.
+These are generated using OpenGL and the script `Datasets\opengl2matlab.m`. To generate additional data, see the next sections.
 
 # Data
 
