@@ -13,15 +13,15 @@ Applying the logarithm on both sides, this is equivalent to solving:
 
 $$\delta -(\eta + c \alpha) = 0 $$
 
-where $\delta = \log( I - I_{\text{diffuse}})-\beta$, $\beta = \max(0, s\cdot n)\phi$, $\alpha = \log(\max(0, h \cdot n))$, $\eta= \log(c+2)\rho_s$.
+where $\delta = \log( I - I_{\text{diffuse}})-\beta$, $\beta = \log(\max(0, s\cdot n)\phi)$, $\alpha = \log(\max(0, h \cdot n))$, $\eta= \log(c+2)\rho_s$.
 
-To the $\max$ term, a spherical gaussian approximation can be applied.
+To the $\max$ terms, a spherical gaussian approximation can be applied, yielding a modification of this standard Phong BRDF.
 
-Calling the residual $r:=\delta -(\eta + c \alpha)$, we can use the theory of robust estimators to developed an alternatively reweighted least squares algorithm. In fact our model can be cast in a regression-like form:
+Moreover, calling the residual $r:=\delta -(\eta + c \alpha)$, we can use the theory of robust estimators to develop an alternatively reweighted least squares algorithm. In fact our model, can be cast in a regression-like form:
 
 $$s=h(b)+\epsilon$$
 
-where $s$ is data, $b$ is to estimate, $\epsilon$ is noise. For $\Phi$ a robust estimator, and $r$ as above (in this notation, $r(b)=\log(s)-\log(h(b))$, the logarthmic optimization reads:
+where abstractly, $s$ is data, $b$ are the parameters to be estimated from the knowledge of $s$, $\epsilon$ is noise. For $\Phi$ a robust estimator, and $r(b)=\log(s)-\log(h(b))$, the logarthmic optimization reads:
 
 $$\min_b \Phi(s(1-e^{-r(b)}))$$
 
@@ -32,3 +32,7 @@ $$w(r) = \frac{\Phi'(s(1-e^{-r(b)}))se^{-r}}{r}$$
 ## Limitations
 
 - wherever a part of the image is free from observations of specularities, there the optimization is ill posed, so that the specular albedo explodes
+
+## Improvements
+
+- connect this purely specular optimization in an alternating fashion to a full photometric stereo pipeline
