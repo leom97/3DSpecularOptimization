@@ -1,0 +1,4 @@
+assimp-vc143-mtd.lib
+assimp-vc143-mtd.pdb
+glfw3.lib
+zlibstaticd.lib
