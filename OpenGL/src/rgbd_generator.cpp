@@ -48,6 +48,10 @@ bool automatic_process{ false };    // it starts the automatic light saving
 bool save{ false };
 int nSnapshots{ 0 };
 
+/*
+ * Let's do the rendering cycle in here
+ * The user can then press buttons and execute actions, like saving RGBD snapshots
+ */
 int main()
 {
     // glfw: initialize and configure
